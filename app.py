@@ -35,68 +35,25 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         #Check for user's access token in header
-        auth_header = request.headers.get('Authorization')
-        if not auth_header:
+        token = request.headers.get('Authorization')
+        if not token:
             return jsonify({'error': 'Please login first.'}), 401 #Returning error message when user tries to access contents for logged in users as guest
         try:
             token = token.replace('Bearer ', '') #Checking the user's access token
             user = supabase.auth.get_user(token)
             request.user = user
-            request.token = token
-
-            user_id = user.user.id
-            profile_resp = requests.get(
-                api_url(f'profiles?id=eq.{user_id}&select=role'),
-                headers={'apikey': SUPABASE_KEY, 'Authorization': f'Bearer{token}'}
-            )
-            if profile_resp.status_code == 200 and profile_resp.json():
-                request.user_role = profile_resp.json()[0]['role']
-            else:
-                request.user_role = 'user'
         except Exception as e: #Returning error message when token is invalid or expired
             traceback.print_exc()
             return jsonify({'error': 'Access token invalid or expired'}), 401
         return f(*args, **kwargs)             
     return decorated_function
 
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        auth_header = request.headers.get('Authorization')
-        if not auth_header:
-            return jsonify({'error': '请先登录'}), 401
-        try:
-            token = auth_header.replace('Bearer ', '')
-            user = supabase.auth.get_user(token)
-            request.user = user
-            request.token = token
-
-            user_id = user.user.id
-            profile_resp = requests.get(
-                api_url(f'profiles?id=eq.{user_id}&select=role'),
-                headers={'apikey': SUPABASE_KEY, 'Authorization': f'Bearer {token}'}
-            )
-            if profile_resp.status_code == 200 and profile_resp.json():
-                role = profile_resp.json()[0]['role']
-            else:
-                role = 'user'
-
-            if role != 'admin':
-                return jsonify({'error': '需要管理员权限'}), 403
-
-            request.user_role = role
-        except Exception as e:
-            traceback.print_exc()
-            return jsonify({'error': '令牌无效或已过期'}), 401
-        return f(*args, **kwargs)
-    return decorated_function
-
-
-
 #data fetching test with welcome message
 @app.route('/api/welcome', methods=['GET'])
 def welcome():
     return jsonify('Hello, world! Man, what can I say?')
+
+#----------------Article Routers----------------
 
 # Get all articles
 @app.route('/api/articles', methods=['GET'])
@@ -128,7 +85,7 @@ def get_article(id):
 
 #Creating new articles
 @app.route('/api/articles', methods=['POST'])
-@admin_required
+@login_required
 def create_article():
     data = request.get_json()
     if not data or 'title' not in data or 'content' not in data:
@@ -140,14 +97,13 @@ def create_article():
             headers={**HEADERS, 'prefer': 'return=representation'}
         )
         resp.raise_for_status()
-        return jsonify(resp.json()), 201
+        return jsonify(resp.json()[0]), 201
     except requests.exceptions.RequestException as e:
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 #Updating existing articles
 @app.route('/api/articles/<int:id>', methods=['PUT'])
-@admin_required
 def update_article(id):
     data = request.get_json()
     if not data:
@@ -168,7 +124,6 @@ def update_article(id):
 
 #Deleting articles
 @app.route('/api/articles/<int:id>', methods=['DELETE'])
-@admin_required
 def delete_article(id):
     try:
         resp = requests.delete(api_url(f'article?id=eq.{id}'), headers=HEADERS)
@@ -179,18 +134,53 @@ def delete_article(id):
     except requests.exceptions.RequestException as e:
         return jsonify({'error': str(e)}), 500
 
-#User registration
-@app.route('/api/auth/register', methods=['POST'])
-def register():
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
+#--------Comment Routers-------------
 
-    if not email or not password:
+#Get all commments for a particular article
+@app.route('/api/articles/<int:article_id>/comments', methods=['GET'])
+def get_comments(article_id):
+    try:
+        resp = requests.get(api_url(f'comment?select=id,content,created_at,user_id,article_id&article_id=eq.{article_id}&order=created_at.desc'), headers=HEADERS) 
+        #Check status code of request
+        resp.raise_for_status()
+        data = resp.json()
+        return jsonify(resp.json()) #Return the articles as jsonified data
+    except requests.exceptions.RequestException as e: #Returning error message when an error happens.
+        traceback.print_exc()
+        return jsonify({'error': str (e)}), 500
+
+@app.route('/api/articles/<int:article_id>/comments', methods=['POST'])
+@login_required
+def create_comment(article_id):
+    data = request.get_json()
+    if not data or 'content' not in data: #cCheck whether the comment has a content
+        return jsonify({'error': 'The comment cannot be blank!'}), 400 #Return error message when user tries to send blank comment
+    try:
+        resp = requests.post(
+            api_url(f'comment?select=id,content,created_at,user_id,article_id&article_id=eq.{article_id}'),
+            json=data,
+            headers={**HEADERS, 'prefer': 'return=representation'}
+        )
+        resp.raise_for_status()
+        return jsonify(resp.json()), 201
+    except requests.exceptions.RequestException as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+#--------User Authentication Routers-----------------
+
+#User registration
+@app.route('/api/auth/register', methods=['POST']) #Router for user registration
+def register():
+    data = request.get_json() #Get the json message sent by user
+    email = data.get('email') #Load the email given in json message
+    password = data.get('password') #Load the password given in json message
+
+    if not email or not password: #Ensure that the email or password are not blank
         return jsonify({'error': 'Email and password cannot be blank!'}), 400
 
     try:
-        res = supabase.auth.sign_up({'email': email, 'password': password})
+        res = supabase.auth.sign_up({'email': email, 'password': password}) #Add user to database's list of users
         return jsonify({
             'message': 'Registration successful, check your email for confirmation link' if res.user.identities else 'Registration successful',
             'user':{
@@ -201,14 +191,14 @@ def register():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-#User login
-@app.route('/api/auth/login', methods=['POST'])
+
+@app.route('/api/auth/login', methods=['POST']) #Router for user login
 def login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
 
-    if not email or not password:
+    if not email or not password: #Ensure that the email or password are not blank
         return jsonify({'error': 'Email and password cannot be blank!'}), 400
 
     try:
@@ -225,6 +215,5 @@ def login():
         return jsonify({'error': 'Incorrect email or password!'}), 400
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT, 5000'))
-    app.run(host = '0.0.0.0', port=port)
+    app.run(debug=True, port=3000)
 

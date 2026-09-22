@@ -1,0 +1,112 @@
+<!DOCTYPE html> 
+
+<html>
+
+<head>
+  <link rel="stylesheet" href="CSS/main.css">
+  <title>Trout Fishing in Canterbury for Beginners</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <header>
+      <img id="HeaderImage" src="Images\HeaderImage.png"
+    </header>
+    <nav class="topnav" id="myTopnav"> <!--Navigation bar-->
+        <a href="Home.html">Home</a>
+        <a href="BraidedRivers.html">Braided Rivers</a>
+        <a href="HighCountryLakes.html">High Country Lakes</a>
+        <a>Glacial Lakes</a>
+        <a href="LowlandRivers.html">Lowland Rivers</a>
+        <a href="SpringCreeks.html">Spring Creeks</a>
+    </nav>
+
+    <div id="main"> <!--Main body of the object-->
+      <h1 id ="title">Failed to load title.</h1>
+      <p id="article">Glacial Lakes.</p>
+    </div>
+
+    <div id="commentBox">
+      <label>Comments:</label>
+      <ul id="comments">There is no comments yet. Become the first commenter!</ul> <!--Find out more about ul and li and how to load all comments at once.-->
+
+      <form>
+        <label for="comment">Add comment:</label>
+        <input type="text" id="newComment" name="comment">
+        <input id="submitComment" type="submit" value="Submit comment"
+      </form>
+    </div>
+
+    <footer>
+      Wenbo Fan<br>
+      Copyright@Mahuika Broadcasting Association<br>
+      mba@hillmorton.school.nz (false email for demonstration only)<br>
+    </footer>
+</body>
+
+<script src="main.js"></script>
+<script> //Sending request for articles to the backend
+  window.addEventListener("DOMContentLoaded", async() =>{
+    const response = await fetch('http://localhost:3000/api/articles/19');
+    const data = await response.json()
+    console.log(data);
+    document.getElementById("article").textContent = data.content; //Load paragraph with article returned by the backend
+    document.getElementById("title").textContent = data.title; //Load title with article returned by the backend
+    console.log(document.getElementById("paragraph"));
+});
+
+  window.addEventListener("DOMContentLoaded", async() =>{
+    const container = document.getElementById('comments');
+    container.innerHTML = '';
+    
+    const response = await fetch('http://localhost:3000/api/comments');
+    const comments = await response.json()
+
+    comments.forEach(comment => {
+      const div = document.createElement('div');
+      div.className = 'comment-item';
+
+      const content = document.createElement('p');
+      content.textContent = comment.content;
+
+      const time = document.createElement('span');
+      time.textContent = new Date(comment.created_at).toLocaleString();
+
+      div.appendChild(content);
+      div.appendChild(time);
+      container.appendChild(div);
+    });
+    
+});
+
+  document.getElementById("submitComment").addEventListener('click', async (e) =>{
+    const comment = document.getElementById("newComment").value.trim();
+    const requestBody = {
+      content: comment,
+      published: true
+    };
+    try{
+      const response = await fetch('http://localhost:3000/api/comments', {
+        method: 'POST',
+        headers:{
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      const data = await response.json();
+
+      if (response.ok){
+        alert('Comment submitted successfully! ');
+        comment.value = "";
+      }else{
+        alert('Comment failed.')
+      }
+    }catch (error){
+      console.error('Request failed: ', error)
+    }
+  });
+</script>
+
+
+</html>
