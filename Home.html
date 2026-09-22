@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html> 
 
 <html>
@@ -42,4 +43,141 @@
 </script>
 
 
+=======
+<!DOCTYPE html> 
+
+<html>
+
+<head>
+  <link rel="stylesheet" href="CSS/main.css"> <!--Link to stylesheet-->
+  <title>Trout Fishing in Canterbury for Beginners</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!--Define viewport so that the page adjusts to window size-->
+</head>
+
+<body>
+    <header>
+      <img id="HeaderImage" src="Images\HeaderImage.png"> <!--Display title image-->
+    </header>
+    <nav class="topnav" id="myTopnav"> <!--Navigation bar-->
+        <a>Home</a>
+        <a href="BraidedRivers.html">Braided Rivers</a> <!--Link to different pages-->
+        <a href="HighCountryLakes.html">High Country Lakes</a>
+        <a href="GlacialLakes.html">Glacial Lakes</a>
+        <a href="LowlandRivers.html">Lowland Rivers</a>
+        <a href="SpringCreeks.html">Spring Creeks</a>
+        <button id="login">Log in</button>
+        <button id="register">Register</button>
+    </nav>
+
+    <div id="main"> <!--Main body of the object-->
+      <h1 id ="title">Failed to load title.</h1> <!--Texts to displau if article does not load-->
+      <p id="article">Failed to load article.</p>
+    </div>
+
+    <div id="loginModal" class="modalOverlay">
+      <div id="loginModalBody" class="modalBody">
+        <form id-="loginForm" onsubmit="return false;">
+          <label>Email</label>
+          <input type="text" id="loginEmail" class="userAuth">
+          <label>Password</label>
+          <input type="text" id="loginPassword" class="userAuth">
+          <input id="submitAuth" type="submit" value="Submit comment" class="userAuth">
+        </form>
+      </div>
+    </div>
+
+    <div id="registerModal" class="modalOverlay">
+      <div id="registerModalBody" class="modalBody">
+        Register<br>
+        <button id="closeBtn" class="modal-close">Close</button>
+      </div>
+    </div>
+
+    <div id="commentBox"> <!--Comment section-->
+      <label>Comments:</label>
+      <ul id="comments">There is no comments yet. Become the first commenter!</ul> <!--Text to display if no comments exist for this article.-->
+
+      <form> <!--Form to create new comment-->
+        <label for="comment">Add comment:</label>
+        <input type="text" id="newComment" name="comment">
+        <input id="submitComment" type="submit" value="Submit comment">
+      </form>
+    </div>
+
+    <footer> <!--Footer-->
+      Wenbo Fan<br>
+      Copyright@Mahuika Broadcasting Association<br>
+      mba@hillmorton.school.nz (false email for demonstration only)<br>
+    </footer>
+</body>
+
+<script src="Javascript/main.js"></script>
+<script> //Sending request for articles to the backend
+  window.addEventListener("DOMContentLoaded", async() =>{
+    const response = await fetch('http://localhost:3000/api/articles/5');
+    const data = await response.json()
+    console.log(data);
+    document.getElementById("article").textContent = data.content; //Load paragraph with article returned by the backend
+    document.getElementById("title").textContent = data.title; //Load title with article returned by the backend
+    console.log(document.getElementById("paragraph"));
+});
+
+  window.addEventListener("DOMContentLoaded", async() =>{
+    const container = document.getElementById('comments');
+    container.innerHTML = '';
+    
+    const response = await fetch('http://localhost:3000/api/articles/5/comments');
+    const comments = await response.json()
+
+    comments.forEach(comment => {
+      const div = document.createElement('div');
+      div.className = 'comment-item';
+
+      const content = document.createElement('p');
+      content.textContent = comment.content;
+
+      const time = document.createElement('span');
+      time.textContent = new Date(comment.created_at).toLocaleString();
+
+      div.appendChild(content);
+      div.appendChild(time);
+      container.appendChild(div);
+    });
+    
+});
+
+//Creating new comments
+  document.getElementById("submitComment").addEventListener('click', async (e) =>{
+    const comment = document.getElementById("newComment").value.trim();
+    const requestBody = {
+      "article_id": "5",
+      "content": comment,
+    };
+    try{
+      const response = await fetch('http://localhost:3000/api/articles/5/comments', {
+        method: 'POST',
+        headers:{
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${token}',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (response.ok){
+        alert('Comment submitted successfully! ');
+        comment.value = "";
+        window.location.reload();
+      }else{
+        alert('Comment failed.')
+      }
+    }catch (error){
+      console.error('Request failed: ', error)
+    }
+  });
+
+
+</script>
+
+
+>>>>>>> 534f6879061213b32e447fc4021a170b07c64c42
 </html>
