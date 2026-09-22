@@ -1,0 +1,50 @@
+header{
+    border: solid;
+}
+
+footer{
+    border: solid;
+}
+
+.topnav{
+    background-color: aqua;
+    overflow: hidden;
+    border: solid;
+    margin: auto;
+}
+
+.topnav a{
+    float: left;
+    display: block;
+    color: black;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+}
+
+.topnav a:hover{
+    background-color: aquamarine;
+    color: white;
+}
+
+.topnav a:active{
+    background-color: cornflowerblue; 
+    color: azure;
+}
+
+#paragraph{
+    border: solid;
+    text-align: center;
+    white-space: pre-wrap; /*Enable loading blank lines from json */
+    position: static;
+    max-width: 60ch;
+}
+
+#title{
+    text-align: center;
+}
+
+#main{
+    max-width: 100%;
+}
