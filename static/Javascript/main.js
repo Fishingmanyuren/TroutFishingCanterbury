@@ -1,5 +1,5 @@
-const paragraph = document.getElementById("paragraph");
-const API_BASE = 'http://localhost:3000/api';
+﻿const paragraph = document.getElementById("paragraph");
+const API_BASE = '/api';
 const loginModal = document.getElementById('loginModal');
 const registerModal = document.getElementById('registerModal');
 const loginEmail = document.getElementById('loginEmail');
@@ -46,7 +46,7 @@ document.getElementById("submitAuth").addEventListener('click', async (e) =>{
   };
   
   try{
-    const response = await fetch('http://localhost:3000/api/auth/login', {
+    const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers:{
         'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ document.getElementById("submitRegister").addEventListener('click', async (e) =>
     "password": password,
   };
   try{
-    const response = await fetch('http://localhost:3000/api/auth/register', {
+    const response = await fetch('/api/auth/register', {
       method: 'POST',
       headers:{
         'Content-Type': 'application/json',

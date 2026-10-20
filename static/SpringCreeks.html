@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+﻿<!DOCTYPE html> 
 
 <html>
 
@@ -76,7 +76,7 @@
 <script src="Javascript/main.js"></script>
 <script> //Sending request for articles to the backend
   window.addEventListener("DOMContentLoaded", async() =>{
-    const response = await fetch('http://localhost:3000/api/articles/9');
+    const response = await fetch('/api/articles/9');
     const data = await response.json()
     console.log(data);
     document.getElementById("article").textContent = data.content; //Load paragraph with article returned by the backend
@@ -88,7 +88,7 @@
     const container = document.getElementById('comments');
     container.innerHTML = '';
     
-    const response = await fetch('http://localhost:3000/api/articles/9/comments');
+    const response = await fetch('/api/articles/9/comments');
     const comments = await response.json()
 
     comments.forEach(comment => {
@@ -124,7 +124,7 @@
     }else{
 
       try{
-        const response = await fetch('http://localhost:3000/api/articles/9/comments', {
+        const response = await fetch('/api/articles/9/comments', {
           method: 'POST',
           headers:{
             'Content-Type': 'application/json',
